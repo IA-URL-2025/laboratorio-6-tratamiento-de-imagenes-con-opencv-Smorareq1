@@ -1,0 +1,103 @@
+name: "Laboratorio 6 – Preprocesamiento de Imágenes"
+run_name: "Autograding: ${{ github.actor }}"
+
+on:
+  - push
+  - workflow_dispatch
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  autograding:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-grayscale
+        with:
+          test-name: to_grayscale (10 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestToGrayscale -v --tb=short
+          timeout: 30
+          max-score: 10
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-resize
+        with:
+          test-name: resize_image (10 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestResizeImage -v --tb=short
+          timeout: 30
+          max-score: 10
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-blur
+        with:
+          test-name: apply_blur (15 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestApplyBlur -v --tb=short
+          timeout: 30
+          max-score: 15
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-threshold
+        with:
+          test-name: apply_threshold (15 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestApplyThreshold -v --tb=short
+          timeout: 30
+          max-score: 15
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-bc
+        with:
+          test-name: adjust_brightness_contrast (15 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestAdjustBrightnessContrast -v --tb=short
+          timeout: 30
+          max-score: 15
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-edges
+        with:
+          test-name: detect_edges (15 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestDetectEdges -v --tb=short
+          timeout: 30
+          max-score: 15
+
+      - uses: classroom-resources/autograding-command-grader@v1
+        id: grader-pipeline
+        with:
+          test-name: full_pipeline (20 pts)
+          setup-command: ""
+          command: pytest tests/test_preprocessing.py::TestFullPipeline -v --tb=short
+          timeout: 60
+          max-score: 20
+
+      - uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          AUTOGRADING_RESULTS_PATH: autograding.json
+        with:
+          runners: >-
+            ${{ steps.grader-grayscale.outputs.result }},
+            ${{ steps.grader-resize.outputs.result }},
+            ${{ steps.grader-blur.outputs.result }},
+            ${{ steps.grader-threshold.outputs.result }},
+            ${{ steps.grader-bc.outputs.result }},
+            ${{ steps.grader-edges.outputs.result }},
+            ${{ steps.grader-pipeline.outputs.result }}

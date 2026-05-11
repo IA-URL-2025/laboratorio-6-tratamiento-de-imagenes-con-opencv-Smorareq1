@@ -1,0 +1,133 @@
+name: Autograding
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  autograding:
+    name: "Run Tests & Report Score"
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup ──────────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # ── 3. Install dependencies ──────────────────────────────────────────
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── 4. Run tests with detailed output ────────────────────────────────
+      - name: Run pytest
+        id: pytest
+        run: |
+          pytest tests/ \
+            --tb=short \
+            --no-header \
+            -v \
+            --junit-xml=results.xml \
+            2>&1 | tee pytest_output.txt
+        continue-on-error: true
+
+      # ── 5. Upload JUnit XML for GitHub's test reporting ──────────────────
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: results.xml
+
+      # ── 6. Autograder action (GitHub Classroom) ──────────────────────────
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          AUTOGRADING_TESTS_REPORTER: |
+            [
+              {
+                "name": "to_grayscale",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestToGrayscale -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 30,
+                "points": 10
+              },
+              {
+                "name": "resize_image",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestResizeImage -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 30,
+                "points": 10
+              },
+              {
+                "name": "apply_blur",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestApplyBlur -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 30,
+                "points": 15
+              },
+              {
+                "name": "apply_threshold",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestApplyThreshold -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 30,
+                "points": 15
+              },
+              {
+                "name": "adjust_brightness_contrast",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestAdjustBrightnessContrast -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 30,
+                "points": 15
+              },
+              {
+                "name": "detect_edges",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestDetectEdges -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 30,
+                "points": 15
+              },
+              {
+                "name": "full_pipeline",
+                "setup": "",
+                "run": "pytest tests/test_preprocessing.py::TestFullPipeline -v --tb=short",
+                "input": "",
+                "output": "",
+                "comparison": "included",
+                "timeout": 60,
+                "points": 20
+              }
+            ]
+        with:
+          runners: ${{ steps.pytest.outcome }}

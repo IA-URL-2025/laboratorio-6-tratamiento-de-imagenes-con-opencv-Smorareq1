@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.eggs/
+*.egg-info/
+dist/
+build/
+.env
+.venv
+env/
+venv/
+*.log
+results.xml
+pytest_output.txt
+autograding.json
+.DS_Store
